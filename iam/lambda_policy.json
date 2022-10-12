@@ -1,0 +1,24 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1663829082164",
+      "Action": "*",
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Stmt1665494645000",
+      "Action": ["s3:*",
+                  "ses:*"],
+      "Effect": "Allow",
+      "Resource": "*"
+    },
+    {
+      "Sid": "Stmt1665494674851",
+      "Action": "glue:*",
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
