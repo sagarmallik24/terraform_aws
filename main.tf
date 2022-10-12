@@ -75,23 +75,35 @@ data "archive_file" "zip_the_python_code" {
     output_path = "${local.lambda_zip_locations}"
 }
 
+# creating bucket
 
+resource "aws_s3_bucket" "bucket" {
+
+  bucket = "${var.user}-${var.bucket_name}"
+
+}
+
+# put lambda Script in s3 bucket 
+
+resource "aws_s3_object" "lambda_Script" {
+
+  bucket = aws_s3_bucket.bucket.id
+  key    = "lambda_Script/s3_to_dynamodb.zip"
+  source = "python/s3_to_dynamodb.zip"
+  etag   = filemd5(data.archive_file.zip_the_python_code.output_path)
+
+}
 #create a lambda funtion
 
 resource "aws_lambda_function" "terraform_lambda_func" {
 
-    filename       = "${local.lambda_zip_locations}"
     function_name  = "${var.lambda_function}"
+    s3_bucket      = aws_s3_bucket.bucket.id
+    s3_key         = aws_s3_object.lambda_Script.key
     role           = aws_iam_role.lambda_role_s3trigg.arn
     handler        = "s3_to_dynamodb.lambda_handler"
     runtime        = "python3.8"  
-}
-
-# creating bucket
-
-resource "aws_s3_bucket" "bucket" {
-  bucket = "${var.user}-${var.bucket_name}"
-
+    source_code_hash = data.archive_file.zip_the_python_code.output_base64sha256
 }
 
 # for triggering lambda function
@@ -105,8 +117,6 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
     lambda_function_arn = aws_lambda_function.terraform_lambda_func.arn
     events              = ["s3:ObjectCreated:*"]
   }
-
-
 }
 
 #lambda_permission for s3 to invoke lambda 
@@ -118,15 +128,14 @@ resource "aws_lambda_permission" "allow_bucket" {
   function_name = aws_lambda_function.terraform_lambda_func.arn
   principal     = "s3.amazonaws.com"
   source_arn    = "arn:aws:s3:::${aws_s3_bucket.bucket.id}"
-
 } 
+
 #--------------------------for glue----------------------------------------
 
 resource "aws_iam_role" "glue_role" {
 
     name = "terraform_aws_glue_role"
     assume_role_policy = "${file("iam/glue_role.json")}"
-  
 }
 
 resource "aws_iam_role_policy" "iam_policy_for_glue" {
@@ -136,7 +145,7 @@ resource "aws_iam_role_policy" "iam_policy_for_glue" {
     policy = "${file("iam/glue_policy.json")}"
 }
 
-resource "aws_s3_bucket_object" "upload-script" {
+resource "aws_s3_bucket_object" "glue-script" {
 
     bucket = aws_s3_bucket.bucket.id
     key = "Glue_Script/glue_dyno.py"
@@ -161,8 +170,6 @@ resource "aws_glue_job" "try_glue_job" {
     execution_property {
       max_concurrent_runs = 3
     }
-  
-  # glue_version = "3.0"
 }
 
 #================for dynamodb ==================
