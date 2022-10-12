@@ -200,9 +200,3 @@ resource "aws_dynamodb_table" "new-dynamodb-table" {
     Environment = "production"
   }
 }
-
-
-
-
-
-
