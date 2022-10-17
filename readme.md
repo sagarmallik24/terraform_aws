@@ -14,7 +14,7 @@
 
     1. terraform init
     2. terraform plan -out=user.txt 
-            -  when planing the terrafrom file it will ask aws credintials that will be save in terraform.tfvars
+            -  when planing the terrafrom file it will ask aws credential that will be save in terraform.tfvars
 
     3. terraform apply -- user.txt
 
